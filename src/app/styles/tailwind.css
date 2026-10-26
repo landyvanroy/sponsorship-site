@@ -1,0 +1,9 @@
+/* Tailwind 入口（Tailwind v4）
+ * 全站已有手写 CSS（style.css / pages/*.css）走非分层级联，会天然压过 @layer 中的
+ * Tailwind 样式，因此这里刻意不引入 preflight（基础重置），避免破坏既有排版。
+ * 需要重置时再改用 `@import "tailwindcss";` 即可。
+ * 仅引入 theme + utilities，并显式声明扫描范围（项目所有 JSX）。 */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@source "../**/*.jsx";

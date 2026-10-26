@@ -4,10 +4,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { createRequire } from 'node:module';
 import subsetFont from 'subset-font';
 import esbuild from 'esbuild';
+import { execSync } from 'node:child_process';
 
+const require = createRequire(import.meta.url);
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
+const DEVTOOLS = process.argv.includes('--devtools');
 const DIST = path.join(ROOT, 'dist');
 const FONT_SOURCE = path.join(ROOT, 'fonts/source/source-font.ttf');
 const FONT_FAMILY = 'KingHwaOldSong';
@@ -56,6 +60,15 @@ async function main() {
 
   // ---- 5. 拷贝静态资产 ----
   copyDir(path.join(ROOT, 'src/assets'), path.join(DIST, 'assets'));
+
+  // ---- 5.1 拷贝页面级样式：src/app/pages/*.css → dist/assets/css/pages/ ----
+  copyPageCss();
+
+  // ---- 5.2 Tailwind CSS：CLI 编译 src/app/styles/tailwind.css → dist/assets/css/tailwind.css ----
+  buildTailwindCss();
+
+  // ---- 5.5 仅 dev：注入 React DevTools 客户端运行时（--devtools） ----
+  if (DEVTOOLS) await bundleDevtoolsClient();
 
   // ---- 6. 从渲染产物收集全部码点（「动态打包」的依据） ----
   const text = collectCodepoints(DIST);
@@ -116,6 +129,62 @@ async function bundleSSR() {
 
 function render(renderPage, page, outFile, data) {
   write(path.join(DIST, outFile), renderPage(page, data));
+}
+
+// ---------- 仅 dev：React DevTools 接线（--devtools / npm run dev:devtools） ----------
+
+// 纯静态站没有客户端运行时，React DevTools 无处附着。此步打包 dev-only 的
+// 客户端入口（整份文档 hydration）+ 独立版 DevTools backend 并注入 HTML。
+// 生产构建不走该分支，dist/ 产物仍为纯静态零 JS。
+async function bundleDevtoolsClient() {
+  const jsDir = path.join(DIST, 'assets/js');
+  fs.mkdirSync(jsDir, { recursive: true });
+  await Promise.all([
+    esbuild.build({
+      entryPoints: [path.join(ROOT, 'src/app/entry-client.jsx')],
+      outfile: path.join(jsDir, 'entry-client.js'),
+      bundle: true,
+      format: 'iife',
+      platform: 'browser',
+      target: 'es2020',
+      jsx: 'automatic',
+      define: { 'process.env.NODE_ENV': '"development"' },
+      logLevel: 'warning',
+    }),
+    // backend 是浏览器可用的 UMD（无 exports/module 环境下自动挂到 self）。
+    // 不能经 esbuild 二次打包：CJS 包装会吞掉 module.exports，全局对象就丢了。
+    fs.promises.copyFile(
+      require.resolve('react-devtools-core/dist/backend'),
+      path.join(jsDir, 'react-devtools-backend.js')
+    ),
+  ]);
+  // 顺序关键：先装全局 hook（initialize）→ 再连接独立应用（默认 ws://localhost:8097）
+  // → 最后加载 entry-client（react-dom 求值时向已存在的 hook 注册 renderer）
+  const inject = [
+    '<script src="/assets/js/react-devtools-backend.js"></script>',
+    '<script>window.ReactDevToolsBackend.initialize();window.ReactDevToolsBackend.connectToDevTools();</script>',
+    '<script src="/assets/js/entry-client.js"></script>',
+  ].join('\n');
+  for (const html of collectHtml(DIST)) {
+    const src = fs.readFileSync(html, 'utf8');
+    fs.writeFileSync(html, src.replace('</body>', `${inject}\n</body>`));
+  }
+  console.log(
+    '[devtools] injected client runtime + backend — run `npm run devtools` to open the standalone app'
+  );
+}
+
+function collectHtml(dir) {
+  const out = [];
+  const walk = (d) => {
+    for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+      const p = path.join(d, entry.name);
+      if (entry.isDirectory()) walk(p);
+      else if (entry.name.endsWith('.html')) out.push(p);
+    }
+  };
+  walk(dir);
+  return out;
 }
 
 // ---------- 码点收集 ----------
@@ -217,4 +286,25 @@ function copyDir(src, dest) {
     if (entry.isDirectory()) copyDir(s, d);
     else fs.copyFileSync(s, d);
   }
+}
+
+// 页面级样式随页面文件存放（src/app/pages/Index.css），构建期拷贝为静态资产
+function copyPageCss() {
+  const pagesDir = path.join(ROOT, 'src/app/pages');
+  const outDir = path.join(DIST, 'assets/css/pages');
+  fs.mkdirSync(outDir, { recursive: true });
+  for (const entry of fs.readdirSync(pagesDir)) {
+    if (entry.endsWith('.css')) {
+      fs.copyFileSync(path.join(pagesDir, entry), path.join(outDir, entry));
+    }
+  }
+}
+
+// Tailwind v4 经官方 CLI 编译；扫描范围由入口样式中的 @source 声明（src/app/**/*.jsx）
+function buildTailwindCss() {
+  const bin = path.join(ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tailwindcss.cmd' : 'tailwindcss');
+  const input = path.join(ROOT, 'src/app/styles/tailwind.css');
+  const output = path.join(DIST, 'assets/css/tailwind.css');
+  fs.mkdirSync(path.dirname(output), { recursive: true });
+  execSync(`"${bin}" -i "${input}" -o "${output}" --minify`, { cwd: ROOT, stdio: 'inherit' });
 }

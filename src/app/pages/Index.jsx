@@ -24,13 +24,14 @@ export default function Index({ site }) {
       </section>
 
       <section className="home-motto" aria-label="愿景与使命">
-        <div className="motto-panel" data-char="愿">
+        <div className="motto-panel" data-char="愿景">
           <h2 className="motto-seal">愿景</h2>
-          <p className="motto-text">{site.vision}</p>
+          <p className="motto-text motto-text--vision">用歌声温柔改变世界</p>
         </div>
-        <div className="motto-panel" data-char="使">
+        <div className="motto-panel motto-panel--offset" data-char="使命">
           <h2 className="motto-seal">使命</h2>
-          <p className="motto-text">{site.mission}</p>
+          <p className="motto-text motto-text--mission">以成为艺术水准出色的合唱团</p>
+          <p className="motto-text motto-text--mission">和有责任担当的性少数群体组织为己任</p>
         </div>
       </section>
     </div>

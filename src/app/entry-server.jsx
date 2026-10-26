@@ -10,6 +10,12 @@ const PAGES = {
   '404': NotFoundPage,
 };
 
+// 页面级样式表：与页面文件同目录（src/app/pages/*.css），构建期拷贝到 /assets/css/pages/
+const PAGE_CSS = {
+  index: ['/assets/css/pages/Index.css'],
+  '404': [],
+};
+
 export function renderPage(page, data) {
   const Page = PAGES[page];
   if (!Page) throw new Error(`unknown page: ${page}`);
@@ -18,7 +24,7 @@ export function renderPage(page, data) {
   return (
     '<!DOCTYPE html>\n' +
     renderToStaticMarkup(
-      <Layout title={data.title} description={description} site={site}>
+      <Layout title={data.title} description={description} site={site} pageCss={PAGE_CSS[page]}>
         <Page {...data} />
       </Layout>
     )

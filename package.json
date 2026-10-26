@@ -10,6 +10,8 @@
   "scripts": {
     "build": "node build.js",
     "dev": "node build.js && node dev.js",
+    "dev:devtools": "node build.js --devtools && node dev.js",
+    "devtools": "react-devtools",
     "preview": "node dev.js"
   },
   "dependencies": {
@@ -17,11 +19,14 @@
     "marked": "^18.1.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "sponsorship-site": "file:",
     "subset-font": "^2.9.0"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
     "esbuild": "^0.28.2",
+    "react-devtools": "^8.0.0",
+    "react-devtools-core": "^8.0.0",
+    "tailwindcss": "^4.3.3",
     "wrangler": "^4.0.0"
   }
 }

@@ -15,6 +15,17 @@ npm run dev        # 构建 + 启动 http://localhost:8080（监听 src/ 变化�
 npm run preview    # 只启动服务器（需先 build）
 ```
 
+### React DevTools（可选）
+
+本站是纯静态 SSG，浏览器里没有 React 运行时。`npm run dev:devtools` 会在 dev 构建时额外打包一个客户端运行时（整份文档 hydration）并注入独立版 DevTools backend；配合独立版应用即可检查组件树：
+
+```bash
+npm run dev:devtools   # 终端 1：带 DevTools 接线构建 + 启动 dev server
+npm run devtools       # 终端 2：打开独立版 React DevTools（连接 ws://localhost:8097）
+```
+
+生产构建（`npm run build`）不走该分支，产物仍为纯静态零 JS。
+
 > 本地开发需要把源字体放在 `fonts/source/source-font.ttf`（已被 .gitignore 排除，不入库）。
 > 缺字体时构建不阻塞：页面回退到系统宋体并输出警告。
 
@@ -29,31 +40,47 @@ npm run preview    # 只启动服务器（需先 build）
 │   │   ├── data/gallery.json   # 字帖橱窗数据（JSON 驱动列表 + 详情页）
 │   │   └── posts/*.md          # 随笔（Markdown + frontmatter → 列表 + 详情页）
 │   ├── app/                    # React 组件（Layout/Nav/Footer + 各页面，构建期 SSG 渲染为静态 HTML）
+│   │   └── styles/tailwind.css # Tailwind 入口（theme + utilities，构建期经 CLI 编译）
 │   └── assets/                 # css / img
 ├── fonts/source/               # 源字体（gitignored，禁止入库）
 ├── .github/workflows/deploy.yml# CI/CD
 └── dist/                       # 构建产物（gitignored）
 ```
 
-## 内容更新 Runbook
+## 样式规范
 
-**改文案 / 导航 / 页脚**：编辑 `src/content/site.json`。
+### 分层与归属
 
-**字帖橱窗**：编辑 `src/content/data/gallery.json`，增删或修改 `items` 里的条目（`id` 用 ASCII，一项对应一页 `/gallery/<id>/`）。图片可把真实文件放入 `src/assets/img/` 并把条目的 `image` 字段改为对应路径（如 `/assets/img/xxx.jpg`）；不放图则构建时自动生成 SVG 占位图。
+| 层 | 位置 | 引入方式 | 用途 |
+| --- | --- | --- | --- |
+| Tailwind 工具类 | `src/app/styles/tailwind.css`（入口）→ 编译为 `dist/assets/css/tailwind.css` | `Layout.jsx` 全站 `<link>` | 快速布局 / 间距 / 响应式工具 |
+| 全站样式 | `src/assets/css/style.css` | `Layout.jsx` 全站 `<link>` | 页面框架（`.page` / `.page-main`）、Header / Footer、通用排版 |
+| 页面级样式 | `src/app/pages/*.css`（与页面 JSX 同目录） | `Layout` 的 `pageCss` 属性按页传入 | 仅该页面使用的选择器 |
 
-**随笔**：在 `src/content/posts/` 新建 `my-post.md`（文件名即 URL slug）：
+规则：
 
-```markdown
----
-title: 标题
-date: 2026-10-18
-summary: 摘要（列表页显示）
----
+- **页面专属样式一律写在 `src/app/pages/<Page>.css`**，并在对应页面组件调用 `Layout` 时通过 `pageCss={[...]}` 传入；不要把页面选择器写进 `style.css`，也不要新建全局表。
+- **两个以上页面复用的样式**才提升到 `style.css`，命名用 `kebab-case`，前缀体现归属（如 `cover-`、`motto-`）。
+- 构建期页面 CSS 被拷贝为 `/assets/css/pages/<Page>.css`，无需手写路径。
 
-正文（Markdown 语法）。
-```
+### Tailwind v4 使用约定
 
-改完 `git push` 即可，GitHub Actions 会自动构建并部署。
+- 工具类适合**一次性布局微调**（`flex` / `gap-*` / `md:*` 等）；成体系的设计语言（竖排文字、线框标题、印章、水印等）继续走手写 CSS，保持可读的中文注释。
+- 入口刻意**未引入 preflight**（基础重置）：全站已有手写排版，引入重置会破坏现有样式。确需重置时再改回 `@import "tailwindcss";`。
+- 类名扫描范围由入口中的 `@source "../**/*.jsx"` 声明；新增扫描目录时改这里，不要依赖默认探测。
+
+### 级联优先级（重要）
+
+加载顺序为 `tailwind.css → style.css → 页面 CSS`，但由于 Tailwind v4 把样式放进 `@layer`，**非分层的手写 CSS 天然压过 Tailwind 工具类**：
+
+- 在既有元素上需要工具类覆盖手写样式时，用 `!` 前缀（如 `!mt-0`），或把手写选择器改为更高优先级；
+- 反之，新写的纯工具类元素不受影响。
+
+### 设计基调
+
+- 配色：纸 `#f4efe6` / 淡墨 `#6b6a66` / 浓墨 `#3a3a38` / 朱砂 `#b03a2e`，新增样式优先取用现有色值。
+- 字体：正文统一走 `--font-song`（京華老宋體子集，定义于 `fonts.css`），不要另设 font-family。
+- 竖排文字用 `writing-mode: vertical-rl` + `text-orientation: upright`（参考 `Index.css` 的题签 / 立轴写法）。
 
 ## 中文字体动态子集化
 
