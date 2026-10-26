@@ -1,44 +1,38 @@
-export default function Index({ site, galleryLatest, postsLatest }) {
+// 首页 — 书衣封面：剧照影印为墨调底图，左上题签竖排团名 + 印章，右缘竖排题跋
+export default function Index({ site }) {
   return (
-    <>
-      <section className="hero">
-        <h1>{site.title}</h1>
-        <p className="intro">{site.intro}</p>
-      </section>
-
-      <section>
-        <h2>字帖橱窗</h2>
-        <div className="grid">
-          {galleryLatest.map((item) => (
-            <a key={item.id} className="card" href={`/gallery/${item.id}/`}>
-              <img src={item.image} alt={item.title} loading="lazy" />
-              <div className="card-body">
-                <h3>{item.title}</h3>
-                <time>{item.date}</time>
-              </div>
-            </a>
-          ))}
+    <div className="home">
+      <section className="home-cover" aria-label={site.title}>
+        <img
+          className="cover-photo"
+          src={site.banner.image}
+          alt={site.banner.alt}
+          width="768"
+          height="1024"
+        />
+        {site.banner.caption && (
+          <p className="cover-caption" aria-hidden="true">
+            {site.banner.caption}
+          </p>
+        )}
+        <div className="cover-slip">
+          <h1 className="cover-title">{site.title}</h1>
+          <span className="seal" aria-hidden="true">
+            歌
+          </span>
         </div>
-        <p className="more">
-          <a href="/gallery/">查看全部字帖 →</a>
-        </p>
       </section>
 
-      <section>
-        <h2>随笔</h2>
-        <ul className="post-list">
-          {postsLatest.map((p) => (
-            <li key={p.slug}>
-              <time>{p.date}</time>
-              <a href={`/posts/${p.slug}/`}>{p.title}</a>
-              {p.summary && <span className="summary">{p.summary}</span>}
-            </li>
-          ))}
-        </ul>
-        <p className="more">
-          <a href="/posts/">更多随笔 →</a>
-        </p>
+      <section className="home-motto" aria-label="愿景与使命">
+        <div className="motto-panel" data-char="愿">
+          <h2 className="motto-seal">愿景</h2>
+          <p className="motto-text">{site.vision}</p>
+        </div>
+        <div className="motto-panel" data-char="使">
+          <h2 className="motto-seal">使命</h2>
+          <p className="motto-text">{site.mission}</p>
+        </div>
       </section>
-    </>
+    </div>
   );
 }

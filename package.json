@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "纯静态个人站点：JSON/Markdown 内容 + React 组件 SSG + Node 构建 + 中文字体动态子集化 + Cloudflare Pages 部署",
+  "description": "北京酷儿合唱团官网：纯静态站点（JSON/Markdown 内容 + React 组件 SSG + Node 构建 + 中文字体动态子集化 + Cloudflare Pages 部署）",
   "engines": {
     "node": ">=20"
   },

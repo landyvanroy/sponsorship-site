@@ -4,8 +4,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { marked } from 'marked';
-import matter from 'gray-matter';
 import subsetFont from 'subset-font';
 import esbuild from 'esbuild';
 
@@ -29,10 +27,6 @@ const HEADERS = `# Cache policy (Cloudflare Pages)
   Cache-Control: public, max-age=31536000, immutable
 /
   Cache-Control: public, max-age=0, must-revalidate
-/gallery/*
-  Cache-Control: public, max-age=0, must-revalidate
-/posts/*
-  Cache-Control: public, max-age=0, must-revalidate
 `;
 
 main().catch((err) => {
@@ -46,43 +40,18 @@ async function main() {
 
   // ---- 1. 载入内容 ----
   const site = readJson('src/content/site.json');
-  const gallery = readJson('src/content/data/gallery.json').items;
-  const posts = loadPosts();
 
-  // ---- 2. 占位图：按标题生成 SVG（零二进制素材；文字用系统字体栈，不进 webfont 子集） ----
-  for (const item of gallery) {
-    item.image = `/assets/img/${item.id}.svg`;
-    write(path.join(DIST, 'assets/img', `${item.id}.svg`), placeholderSvg(item.title, item.id));
-  }
-
-  const ctx = { site, gallery, posts };
+  const ctx = { site };
 
   // ---- 3. 打包并载入 SSG 渲染入口 ----
   const { renderPage } = await bundleSSR();
 
-  // ---- 4. 渲染全部页面 ----
+  // ---- 4. 渲染首页 ----
   render(renderPage, 'index', 'index.html', {
     ...ctx,
     title: site.title,
-    galleryLatest: gallery.slice(0, 3),
-    postsLatest: posts.slice(0, 3),
   });
-  render(renderPage, 'gallery', 'gallery/index.html', { ...ctx, title: `字帖橱窗 · ${site.title}` });
-  for (const item of gallery) {
-    render(renderPage, 'gallery-detail', `gallery/${item.id}/index.html`, {
-      site,
-      item,
-      title: `${item.title} · ${site.title}`,
-    });
-  }
-  render(renderPage, 'posts', 'posts/index.html', { ...ctx, title: `随笔 · ${site.title}` });
-  for (const post of posts) {
-    render(renderPage, 'post-detail', `posts/${post.slug}/index.html`, {
-      site,
-      post,
-      title: `${post.title} · ${site.title}`,
-    });
-  }
+
   render(renderPage, '404', '404.html', { ...ctx, title: `页面不存在 · ${site.title}` });
 
   // ---- 5. 拷贝静态资产 ----
@@ -149,28 +118,6 @@ function render(renderPage, page, outFile, data) {
   write(path.join(DIST, outFile), renderPage(page, data));
 }
 
-// ---------- Markdown ----------
-
-function loadPosts() {
-  const dir = path.join(ROOT, 'src/content/posts');
-  if (!fs.existsSync(dir)) return [];
-  const posts = [];
-  for (const name of fs.readdirSync(dir)) {
-    if (!name.endsWith('.md')) continue;
-    const { data, content } = matter(fs.readFileSync(path.join(dir, name), 'utf8'));
-    const date = data.date instanceof Date ? data.date.toISOString().slice(0, 10) : String(data.date ?? '');
-    posts.push({
-      slug: name.replace(/\.md$/, ''),
-      title: data.title ?? name,
-      date,
-      summary: data.summary ?? '',
-      html: marked.parse(content.trim()),
-    });
-  }
-  posts.sort((a, b) => (a.date < b.date ? 1 : -1));
-  return posts;
-}
-
 // ---------- 码点收集 ----------
 
 function collectCodepoints(dir) {
@@ -227,18 +174,6 @@ function fontsCss(fontFile) {
   lines.push(`:root { --font-song: "${FONT_FAMILY}", ${fallback}; }`);
   lines.push('body { font-family: var(--font-song); }');
   return lines.join('\n') + '\n';
-}
-
-function placeholderSvg(title, id) {
-  const esc = (s) =>
-    s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000" role="img" aria-label="${esc(title)}">
-  <rect width="800" height="1000" fill="#f4efe6"/>
-  <rect x="40" y="40" width="720" height="920" fill="none" stroke="#d8cfbf" stroke-width="2"/>
-  <text x="400" y="480" text-anchor="middle" font-family="'Songti SC','SimSun','Noto Serif CJK SC',serif" font-size="56" fill="#7d7468">${esc(title)}</text>
-  <text x="400" y="540" text-anchor="middle" font-family="sans-serif" font-size="16" letter-spacing="4" fill="#b3aa9c">PLACEHOLDER · ${esc(id)}</text>
-</svg>
-`;
 }
 
 function listPages(dir) {

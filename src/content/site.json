@@ -1,16 +1,31 @@
 {
-  "title": "小站（Mock）",
-  "intro": "这里以后会放一段自我介绍。\nPhase 1 仅用于跑通「内容 → 构建 → 部署」流水线。",
-  "url": "https://sponsorship-site.pages.dev",
+  "title": "北京酷儿合唱团",
+  "logo": "/assets/img/logo.jpg",
+  "banner": {
+    "image": "/assets/img/banner.jpg",
+    "alt": "演出后台：台上谱架阵列，一位团员候场",
+    "caption": ""
+  },
+  "vision": "用歌声温柔改变世界",
+  "mission": "以成为艺术水准出色的合唱团和有责任担当的性少数群体组织为己任",
+  "url": "https://bqcbqc.org",
   "nav": [
     {
-      "label": "首页",
-      "href": "/"
+      "label": "做过什么",
+      "href": "/works/"
     },
     {
-      "label": "字",
-      "href": "/gallery/"
+      "label": "在做什么",
+      "href": "/now/"
+    },
+    {
+      "label": "支持我们",
+      "href": "/support/"
+    },
+    {
+      "label": "联系我们",
+      "href": "/contact/"
     }
   ],
-  "footer": "小站（Mock） · 纯静态 · Cloudflare Pages"
+  "footer": "北京酷儿合唱团"
 }

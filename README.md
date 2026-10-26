@@ -1,8 +1,8 @@
-# sponsorship-site
+# 北京酷儿合唱团 · 官网（sponsorship-site）
 
-纯静态个人站点：**JSON / Markdown 存内容 → React 组件（SSG 渲染）→ Node 构建 → 中文字体动态子集化 → GitHub Actions 自动部署 Cloudflare Pages（免费版）**。
+**北京酷儿合唱团**官方网站。纯静态架构：**JSON / Markdown 存内容 → React 组件（SSG 渲染）→ Node 构建 → 中文字体动态子集化 → GitHub Actions 自动部署 Cloudflare Pages（免费版）**。
 
-> 更新站点 = 编辑 `src/content/` 下的 JSON / Markdown → `git push` → 约 1–2 分钟后自动上线。无数据库、无服务端。
+> 站点文案（团名 / 愿景 / 使命 / 导航 / 页脚）集中在 `src/content/site.json`。更新内容 = 编辑 `src/content/` 下的 JSON / Markdown → `git push` → 约 1–2 分钟后自动上线。无数据库、无服务端。
 
 ## 本地开发
 
