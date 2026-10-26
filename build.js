@@ -19,7 +19,7 @@ const FONT_OUT_BASE = 'kinghwa-oldsong-subset';
 
 // SSG 入口：esbuild 打包 React 组件树（JSX → JS），产物落 node_modules 缓存供 dynamic import
 const SSR_ENTRY = path.join(ROOT, 'src/app/entry-server.jsx');
-const SSR_BUNDLE = path.join(ROOT, 'node_modules/.cache/sponsorship-site/entry-server.mjs');
+const SSR_BUNDLE = path.join(ROOT, 'node_modules/.cache/bqcbqc/entry-server.mjs');
 
 // 码点基线：可打印 ASCII + 常用中文标点，防止动态内容缺字
 const ASCII = Array.from({ length: 95 }, (_, i) => String.fromCharCode(33 + i)).join('');
