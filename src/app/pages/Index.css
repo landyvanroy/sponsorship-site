@@ -1,212 +1,151 @@
-/* 首页（Index.jsx）页面级样式：banner + 竖排愿景/使命 */
-.home {
-  padding: 0;
-}
-
-/* 书衣：竖版封面，剧照影印为墨调底图，居于内容区左侧 */
-.home-cover {
-  width: min(420px, 100%);
-  aspect-ratio: 3 / 4;
-  background: #f4efe6;
-  position: relative;
-}
-.cover-photo {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: grayscale(1); /* 去色成墨调 */
-  mix-blend-mode: multiply; /* 白墙化作纸色，照片如影印于纸上 */
-}
-/* 题跋：竖排于封面右侧纸面（立轴题跋位），与题签顶部对齐 */
-.cover-caption {
-  position: absolute;
-  top: 48px;
-  left: calc(100% + 28px);
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  margin: 0;
-  font-size: 14px;
-  letter-spacing: 0.4em;
-  color: #6b6a66;
-}
-
-/* 题签：书签尺寸，古籍封面左上角，竖排团名 */
-.cover-slip {
-  position: absolute;
-  top: 48px;
-  left: 44px;
-  z-index: 2;
-  width: 84px;
-  padding: 30px 0 22px;
-  background: #fdfdfa;
-  border: 1px solid #3a3a38;
+/* 首页（Index.jsx）页面级样式：杂志式封面 — 剧照 background-cover 满幅，愿景/使命竖排叠印其上 */
+/* 含封面时让 .page-main 变为纵向 flex，封面 flex:1 精确占满主容器剩余空间 */
+.page-main:has(.home-cover) {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 22px;
+  padding-top: 96px;
 }
-.cover-title {
-  writing-mode: vertical-rl;
-  text-orientation: upright;
-  margin: 0;
-  font-size: 26px;
-  font-weight: 600;
-  letter-spacing: 0.3em;
-  line-height: 1;
-  color: #3a3a38;
+.home-cover {
+  position: relative;
+  flex: 1 1 auto;
+  /* 尽量上下占满内容区（扣除 page-main 的上下留白），右侧导航不受影响（.page 为 flex-start，不随之拉伸） */
+  min-height: calc(100vh - 108px);
+  /* 高度适配底图比例（banner 为 720×1080 竖幅），cover 下图片得以完整呈现 */
+  aspect-ratio: 2 / 3;
+  background-size: cover; /* background-cover 满幅 */
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+}
+/* background 无法直接 filter：借伪元素承载底图，去色成墨调 */
+.home-cover::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  filter: grayscale(1) contrast(1.05);
+}
+/* 纸感提亮层：右侧浓、左侧淡，杂志留白 + 保障墨字可读 */
+.home-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    255deg,
+    rgba(250, 248, 244, 0.9) 0%,
+    rgba(250, 248, 244, 0.45) 42%,
+    rgba(250, 248, 244, 0.05) 100%
+  );
 }
 
-/* 愿景/使命：双联立轴 — 朱印题字 + 竖排正文 + 淡墨大字水印 */
+/* 图注：横排小字落款于封面左上，杂志图片说明位 */
+.cover-caption {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding: 28px 0 0 40px;
+  font-size: 14px;
+  letter-spacing: 0.4em;
+  color: #fff;
+}
+
+/* 愿景/使命：竖排墨字组 — 贴容器右缘（右对齐）、整体自顶部起排（顶对齐） */
 .home-motto {
+  position: relative;
+  z-index: 1;
+  flex: 1;
   display: flex;
-  flex-direction: row-reverse; /* 阅读自右向左：愿景在右，使命居左 */
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 72px;
-  height: 640px; /* 加高立轴以容纳超大竖排字号 */
-  margin-top: 72px;
+  flex-direction: row-reverse; /* 自右向左阅读：愿景居右，使命居左 */
+  justify-content: flex-start; /* 整组贴右缘 → 右对齐 */
+  align-items: flex-start; /* 顶对齐 */
+  gap: 56px;
+  padding: 48px 40px;
 }
 .motto-panel {
   position: relative;
-  writing-mode: vertical-rl;
+  writing-mode: vertical-rl; /* 文本自上而下 */
   text-orientation: upright;
-  height: 100%;
+  /* 半透明白色底幕：托住文字、不遮死底图 */
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  padding: 24px 16px;
 }
-/* 淡墨大字水印，衬于正文之后 */
-.motto-panel::before {
-  content: attr(data-char);
-  position: absolute;
-  top: -16px;
-  right: -12px;
-  font-size: 210px;
-  line-height: 1;
-  color: #f1ece1;
-  z-index: -1;
-}
-/* 章节标题：古籍线框题字（双线框），正文大于标题，主次呼应 */
-.motto-seal {
+/* 标题与正文统一字号（28px），仅以字重与墨色分主次，无任何边框 */
+.motto-title {
   margin: 0 0 0 28px; /* 与正文列距（竖排 block-end = 左） */
   height: max-content;
-  background: transparent;
-  color: #3a3a38;
-  font-size: 17px;
-  font-weight: 600;
+  font-size: 28px;
+  font-weight: 700;
   letter-spacing: 0.35em;
-  line-height: 1;
-  padding: 16px 10px;
-  border: 1px solid #3a3a38;
-  outline: 1px solid #3a3a38; /* 外圈细线，仿古籍双边栏线框 */
-  outline-offset: 3px;
+  line-height: 1.6;
+  color: #2c2a26;
 }
 .motto-text {
   margin: 0;
-  letter-spacing: 0.3em;
-  line-height: 2;
-  color: #6b6a66;
-}
-/* 两联超大字号、主次有别：愿景 8 字单列取最大，使命 17 字长句略收 */
-.motto-text--vision {
-  font-size: 48px;
-  letter-spacing: 0.15em;
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
   line-height: 1.6;
+  color: #3a3a38;
 }
-.motto-text--mission {
-  font-size: 30px;
-  letter-spacing: 0.05em;
-  line-height: 1.9;
-}
-
-/* 使命一联左移远离右联、整体下沉，与愿景形成高低错落 */
-.motto-panel--offset {
-  margin-right: 48px; /* 面向右联一侧再留出空间（row-reverse 下右侧即上一联） */
-  margin-top: 64px;
-  height: calc(100% - 64px); /* 收缩高度以保持在容器内，竖排文字自然下沉 */
+.motto-text--vision {
+  color: #2c2a26; /* 愿景八字居首列，墨色最浓 */
 }
 
 /* ===== 响应式 ===== */
 @media (max-width: 880px) {
-  .page-main .home {
-    padding: 0 20px;
+  /* 页头转为顶部横排，桌面为竖排导航预留的 padding-top 不再需要 */
+  .page-main:has(.home-cover) {
+    padding-top: 0;
   }
   .home-cover {
-    width: min(360px, 100%);
+    /* svh：排除移动端地址栏收展带来的 100vh 偏差 */
+    min-height: calc(100svh - 64px);
+  }
+  .cover-caption {
+    padding: 20px 0 0 20px;
   }
   .home-motto {
-    height: 420px;
-    margin-top: 48px;
-    gap: 48px;
+    gap: 36px;
+    padding: 32px 24px 32px 0;
   }
-  .motto-panel::before {
-    font-size: 160px;
-  }
-  .motto-text--vision {
-    font-size: 38px;
-  }
-  .motto-text--mission {
-    font-size: 20px;
-    letter-spacing: 0.02em;
+  .motto-title,
+  .motto-text {
+    font-size: 22px;
   }
 }
 
 @media (max-width: 640px) {
-  /* 题签收窄；题跋转横排落款于封面下；立轴转横排堆叠 */
-  .cover-slip {
-    top: 24px;
-    left: 20px;
-    width: 68px;
-    padding: 20px 0 16px;
-    gap: 14px;
-  }
-  .cover-title {
-    font-size: 20px;
+  /* 竖排转横排堆叠，仍保持顶对齐、右对齐 */
+  .home-cover {
+    min-height: 72svh;
   }
   .cover-caption {
-    position: static;
-    writing-mode: horizontal-tb;
-    text-orientation: mixed;
-    margin: 12px 0 0;
-    letter-spacing: 0.2em;
+    padding: 16px 16px 0;
   }
   .home-motto {
     flex-direction: column;
-    align-items: flex-start;
-    height: auto;
-    gap: 48px;
+    align-items: flex-end; /* 右对齐 */
+    gap: 28px;
+    padding: 24px 16px 32px;
   }
   .motto-panel {
     writing-mode: horizontal-tb;
     text-orientation: mixed;
-    height: auto;
+    padding: 18px 14px;
+    max-width: 100%;
   }
-  .motto-panel::before {
-    font-size: 120px;
-    top: -8px;
-    right: 0;
-  }
-  .motto-panel--offset {
-    margin-right: 0;
-    margin-top: 0;
-  }
-  .motto-seal {
-    display: inline-block;
+  .motto-title {
     margin: 0;
-    padding: 8px 16px;
-    font-size: 15px;
-    letter-spacing: 0.3em;
-    outline-offset: 2px;
+    font-size: 20px;
   }
   .motto-text {
-    margin: 16px 0 0;
-    font-size: 17px;
-    letter-spacing: 0.12em;
-    line-height: 2;
-  }
-  .motto-text--vision {
-    font-size: 30px;
-  }
-  .motto-text--mission {
+    margin-top: 8px;
     font-size: 20px;
+    letter-spacing: 0.06em;
+    line-height: 1.9;
+    text-align: right; /* 横排多行时保持右对齐 */
   }
 }

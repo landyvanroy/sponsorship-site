@@ -51,6 +51,8 @@ body {
   display: flex;
   /* 竖排下行内轴为自上而下：菜单项单列堆叠，参考设计稿 */
   gap: 18px;
+  padding-left: 10px;
+  border-left: 1px solid #2c2a26; /* 贴近导航文本的黑色竖线 */
 }
 .site-menu a {
   color: #9b988f;
@@ -61,6 +63,12 @@ body {
 }
 .site-menu a:hover { color: #b03a2e; }
 .site-menu a.placeholder { color: #c4c0b6; }
+
+/* 折叠导航开关：桌面隐藏（菜单常驻），仅移动端启用（纯 CSS checkbox 方案） */
+.nav-toggle-input,
+.nav-toggle {
+  display: none;
+}
 
 /* 标题与文本 */
 h1 { font-size: 30px; line-height: 1.4; margin: 0 0 12px; }
@@ -104,20 +112,92 @@ time { color: #b3aa9c; font-size: 14px; }
   /* 框架纵向堆叠：页头（横排一行）在上，内容在下 */
   .page { flex-direction: column; padding: 0; }
   .page-main { order: 2; max-width: none; padding: 0 0 64px; }
+  .site-footer .page { padding: 0 20px; } /* 页脚文字不贴屏幕边缘 */
   .site-head {
     order: 1;
+    position: relative;
+    z-index: 20; /* 页头上下文整体压过内容区，保证全屏遮罩盖住正文 */
+    width: 100%; /* 抵消 .page 的 align-items: flex-start 收缩，space-between 才能两端撑开 */
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: space-between; /* logo 居左、菜单按钮居右 */
     align-items: center;
     padding: 16px 20px;
   }
+  /* 汉堡按钮（悬浮于全屏遮罩之上，保证可点击关闭） */
+  .nav-toggle-input {
+    position: absolute;
+    opacity: 0; /* 隐藏但保留键盘可达性 */
+  }
+  .nav-toggle {
+    position: relative;
+    z-index: 12;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 10px;
+    cursor: pointer;
+  }
+  .nav-toggle span {
+    width: 22px;
+    height: 2px;
+    background: #2c2a26;
+    transition: transform 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+  }
+  /* 展开时三条线变 ✕，且转为白色（衬黑色遮罩） */
+  .nav-toggle-input:checked ~ .nav-toggle span {
+    background: #fff;
+  }
+  .nav-toggle-input:checked ~ .nav-toggle span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .nav-toggle-input:checked ~ .nav-toggle span:nth-child(2) {
+    opacity: 0;
+  }
+  .nav-toggle-input:checked ~ .nav-toggle span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+  /* 菜单默认收起；勾选后展开为全屏遮罩：黑色 60% 透明度，文本白色 */
   .site-menu {
+    display: none;
+  }
+  .nav-toggle-input:checked ~ .site-menu {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    mix-blend-mode: normal; /* 脱离页头的混合模式，保证遮罩底色实在 */
     writing-mode: horizontal-tb;
     text-orientation: mixed;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 10px 14px;
+    flex-direction: column;
+    align-items: flex-end; /* 右对齐 */
+    justify-content: flex-start; /* 顶部对齐 */
+    gap: 28px;
+    padding: 96px 32px;
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(4px); /* 遮罩下内容轻微虚化 */
+    -webkit-backdrop-filter: blur(4px);
   }
-  .site-menu a { letter-spacing: 0.2em; white-space: nowrap; }
+  .nav-toggle-input:checked ~ .site-menu a {
+    color: #000;
+  }
+  .nav-toggle-input:checked ~ .site-menu a.placeholder {
+    color: rgba(0, 0, 0, 0.45);
+  }
+  /* 菜单展开时压暗虚化页面内容：40% 遮罩下大字号 motto 文本不再透出与菜单项叠字 */
+  .page:has(.nav-toggle-input:checked) .page-main,
+  .page:has(.nav-toggle-input:checked) .site-footer {
+    filter: blur(6px);
+    opacity: 0.3;
+    transition: filter 0.25s ease, opacity 0.25s ease;
+  }
+  .nav-toggle-input:focus-visible ~ .nav-toggle {
+    outline: 2px solid #b03a2e;
+    outline-offset: 2px;
+  }
+  .site-menu a {
+    letter-spacing: 0.2em;
+    white-space: nowrap;
+    font-size: 18px;
+    text-align: right;
+  }
 }

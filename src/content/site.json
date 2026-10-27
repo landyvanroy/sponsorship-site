@@ -1,5 +1,5 @@
 {
-  "title": "北京酷儿合唱团",
+  "title": "BQC",
   "logo": "/assets/img/logo.jpg",
   "banner": {
     "image": "/assets/img/banner.jpg",
@@ -10,11 +10,11 @@
   "nav": [
     {
       "label": "做过什么",
-      "href": "/works/"
+      "href": "/#works"
     },
     {
       "label": "在做什么",
-      "href": "/now/"
+      "href": "/#now"
     },
     {
       "label": "支持我们",
