@@ -17,6 +17,11 @@ const FONT_SOURCE = path.join(ROOT, 'fonts/source/source-font.ttf');
 const FONT_FAMILY = 'KingHwaOldSong';
 const FONT_OUT_BASE = 'kinghwa-oldsong-subset';
 
+// 国际化：构建期 locale 配置（内容目录 src/content/{locale}/site.json → 产物 dist/{locale}/）
+const LOCALES = ['zh-cn', 'en'];
+const DEFAULT_LOCALE = 'zh-cn';
+const HREF_LANG = { 'zh-cn': 'zh-CN', 'en': 'en' };
+
 // SSG 入口：esbuild 打包 React 组件树（JSX → JS），产物落 node_modules 缓存供 dynamic import
 const SSR_ENTRY = path.join(ROOT, 'src/app/entry-server.jsx');
 const SSR_BUNDLE = path.join(ROOT, 'node_modules/.cache/bqcbqc/entry-server.mjs');
@@ -42,21 +47,29 @@ async function main() {
   const t0 = Date.now();
   fs.rmSync(DIST, { recursive: true, force: true });
 
-  // ---- 1. 载入内容 ----
-  const site = readJson('src/content/site.json');
-
-  const ctx = { site };
+  // ---- 1. 载入内容：src/content/{locale}/site.json ----
+  const sites = Object.fromEntries(
+    LOCALES.map((locale) => [locale, readJson(`src/content/${locale}/site.json`)])
+  );
 
   // ---- 3. 打包并载入 SSG 渲染入口 ----
   const { renderPage } = await bundleSSR();
 
-  // ---- 4. 渲染首页 ----
-  render(renderPage, 'index', 'index.html', {
-    ...ctx,
-    title: site.title,
+  // ---- 4. 按 locale 渲染各语言站点：dist/{locale}/index.html ----
+  for (const locale of LOCALES) {
+    const site = sites[locale];
+    render(renderPage, 'index', path.join(locale, 'index.html'), { site, title: site.title, path: '' });
+  }
+
+  // ---- 4.1 全局 404（Cloudflare Pages 兜底只认 /404.html，中文内容）----
+  render(renderPage, '404', '404.html', {
+    site: sites[DEFAULT_LOCALE],
+    title: `页面不存在 · ${sites[DEFAULT_LOCALE].title}`,
+    path: '',
   });
 
-  render(renderPage, '404', '404.html', { ...ctx, title: `页面不存在 · ${site.title}` });
+  // ---- 4.2 根路径：浏览器语言跳转页（唯一含 JS 的产物）----
+  write(path.join(DIST, 'index.html'), redirectPage(sites));
 
   // ---- 5. 拷贝静态资产 ----
   copyDir(path.join(ROOT, 'src/assets'), path.join(DIST, 'assets'));
@@ -70,8 +83,8 @@ async function main() {
   // ---- 5.5 仅 dev：注入 React DevTools 客户端运行时（--devtools） ----
   if (DEVTOOLS) await bundleDevtoolsClient();
 
-  // ---- 6. 从渲染产物收集全部码点（「动态打包」的依据） ----
-  const text = collectCodepoints(DIST);
+  // ---- 6. 从中文产物收集全部码点（「动态打包」的依据；英文站走系统衬线栈，不参与子集化） ----
+  const text = collectCodepoints([path.join(DIST, DEFAULT_LOCALE), path.join(DIST, '404.html')]);
 
   // ---- 7. 单次字体子集化：33MB TTF → 仅含页面用字的 woff2 ----
   const hasFont = fs.existsSync(FONT_SOURCE);
@@ -93,17 +106,20 @@ async function main() {
     console.warn('[fonts] source font not found → system fallback only');
   }
 
-  // ---- 8. 字体样式表（layout 以 <link> 引用，与渲染顺序解耦） ----
-  write(path.join(DIST, 'assets/css/fonts.css'), fontsCss(fontFile));
+  // ---- 8. 字体样式表（按 locale 拆分：Layout 以 <link> 引用其一，与渲染顺序解耦） ----
+  write(path.join(DIST, 'assets/css/fonts.zh-cn.css'), fontsCss(fontFile));
+  write(path.join(DIST, 'assets/css/fonts.en.css'), fontsEnCss());
 
   // ---- 9. SEO 与缓存策略 ----
-  const pages = listPages(DIST);
-  write(path.join(DIST, 'sitemap.xml'), sitemapXml(site.url, pages));
-  write(path.join(DIST, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${site.url}/sitemap.xml\n`);
+  const entries = LOCALES.flatMap((locale) =>
+    listPages(path.join(DIST, locale)).map((rel) => ({ locale, rel }))
+  );
+  write(path.join(DIST, 'sitemap.xml'), sitemapXml(sites[DEFAULT_LOCALE].url, entries));
+  write(path.join(DIST, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${sites[DEFAULT_LOCALE].url}/sitemap.xml\n`);
   write(path.join(DIST, '_headers'), HEADERS);
 
   console.log(
-    `[build] ${pages.length} pages | ${text.length} codepoints | ` +
+    `[build] ${entries.length} pages (${LOCALES.join(' / ')}) | ${text.length} codepoints | ` +
       (hasFont ? `subset ${(fontSize / 1024).toFixed(1)} KB (${fontFile})` : 'no webfont (fallback only)') +
       ` | ${Date.now() - t0} ms`
   );
@@ -189,28 +205,29 @@ function collectHtml(dir) {
 
 // ---------- 码点收集 ----------
 
-function collectCodepoints(dir) {
+// paths：目录或单个 HTML 文件混合数组，递归/单文件均可
+function collectCodepoints(paths) {
   const set = new Set(BASE_CHARS);
-  const walk = (d) => {
-    for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
-      const p = path.join(d, entry.name);
-      if (entry.isDirectory()) {
-        walk(p);
-      } else if (entry.name.endsWith('.html')) {
-        const html = fs
-          .readFileSync(p, 'utf8')
-          .replace(/<script[\s\S]*?<\/script>/gi, '')
-          .replace(/<style[\s\S]*?<\/style>/gi, '');
-        const text = decodeEntities(html.replace(/<[^>]+>/g, ' '));
-        // for..of 按 code point 迭代，正确处理代理对（增补平面字符）
-        for (const ch of text) {
-          const cp = ch.codePointAt(0);
-          if (cp > 0x20 && cp !== 0xa0) set.add(ch);
-        }
-      }
+  const readHtml = (p) => {
+    const html = fs
+      .readFileSync(p, 'utf8')
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '');
+    const text = decodeEntities(html.replace(/<[^>]+>/g, ' '));
+    // for..of 按 code point 迭代，正确处理代理对（增补平面字符）
+    for (const ch of text) {
+      const cp = ch.codePointAt(0);
+      if (cp > 0x20 && cp !== 0xa0) set.add(ch);
     }
   };
-  walk(dir);
+  const walk = (p) => {
+    if (fs.statSync(p).isDirectory()) {
+      for (const entry of fs.readdirSync(p, { withFileTypes: true })) walk(path.join(p, entry.name));
+    } else if (p.endsWith('.html')) {
+      readHtml(p);
+    }
+  };
+  for (const p of paths) walk(p);
   return [...set].join('');
 }
 
@@ -245,6 +262,48 @@ function fontsCss(fontFile) {
   return lines.join('\n') + '\n';
 }
 
+// 英文站字体：独立系统衬线栈，不引入字体文件、不参与 CJK 子集化
+function fontsEnCss() {
+  return [
+    '/* English site: standalone system serif stack (no CJK webfont) */',
+    ':root { --font-en: Georgia, "Palatino Linotype", "Book Antiqua", Palatino, "Times New Roman", serif; }',
+    'body { font-family: var(--font-en); }',
+    '',
+  ].join('\n');
+}
+
+// 根路径跳转页：按浏览器语言分发 /zh-cn/ 或 /en/（全站唯一含 JS 的产物）
+function redirectPage(sites) {
+  const title = sites[DEFAULT_LOCALE].title;
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${title}</title>
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/jpeg" href="/assets/img/logo.jpg" />
+    <style>
+      body { margin: 0; display: grid; place-items: center; min-height: 100vh; background: #faf8f4; color: #2c2a26; font: 16px/1.9 Georgia, "Songti SC", "SimSun", serif; }
+      a { color: #b03a2e; }
+    </style>
+    <script>
+      (function () {
+        var lang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+        location.replace(/^zh/.test(lang) ? '/zh-cn/' : '/en/');
+      })();
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <p>请选择语言 / Choose your language:</p>
+      <p><a href="/zh-cn/">中文</a> · <a href="/en/">English</a></p>
+    </noscript>
+  </body>
+</html>
+`;
+}
+
 function listPages(dir) {
   const urls = [];
   const walk = (d) => {
@@ -262,9 +321,27 @@ function listPages(dir) {
   return urls.sort();
 }
 
-function sitemapXml(base, urls) {
-  const items = urls.map((u) => `  <url><loc>${base}${u === '/' ? '/' : u}</loc></url>`).join('\n');
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${items}\n</urlset>\n`;
+// sitemap：双语言页面互为 hreflang 交替链接
+// entries: [{ locale, rel }]，rel 为 locale 内相对路径（首页为 '/'）
+function sitemapXml(base, entries) {
+  const byRel = new Map();
+  for (const { locale, rel } of entries) {
+    if (!byRel.has(rel)) byRel.set(rel, {});
+    byRel.get(rel)[locale] = `/${locale}${rel === '/' ? '/' : rel}`;
+  }
+  const items = [...byRel.values()].map((alts) => {
+    const loc = base + alts[DEFAULT_LOCALE];
+    const links = LOCALES.map(
+      (l) => `    <xhtml:link rel="alternate" hreflang="${HREF_LANG[l]}" href="${base}${alts[l]}"/>`
+    ).join('\n');
+    return `  <url>\n    <loc>${loc}</loc>\n${links}\n  </url>`;
+  });
+  return (
+    '<?xml version="1.0" encoding="UTF-8"?>\n' +
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n' +
+    items.join('\n') +
+    '\n</urlset>\n'
+  );
 }
 
 // ---------- 工具 ----------

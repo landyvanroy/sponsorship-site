@@ -1,0 +1,38 @@
+{
+  "locale": "zh-cn",
+  "lang": "zh-CN",
+  "title": "BQC",
+  "description": "用歌声温柔改变世界。北京酷儿合唱团：以成为艺术水准出色的合唱团，和有责任担当的性少数群体组织为己任。",
+  "logo": "/assets/img/logo.jpg",
+  "logoAriaLabel": "BQC · 返回首页",
+  "homeHref": "/",
+  "banner": {
+    "image": "/assets/img/banner.jpg",
+    "alt": "演出后台：台上谱架阵列，一位团员候场",
+    "caption": ""
+  },
+  "url": "https://bqcbqc.org",
+  "fontCss": "/assets/css/fonts.zh-cn.css",
+  "nav": [
+    { "label": "做过什么", "href": "/zh-cn/#works" },
+    { "label": "在做什么", "href": "/zh-cn/#now" },
+    { "label": "支持我们", "href": "/zh-cn/support/" },
+    { "label": "联系我们", "href": "/zh-cn/contact/" }
+  ],
+  "navAriaLabel": "主导航",
+  "placeholderTitle": "规划中",
+  "home": {
+    "ariaLabel": "愿景与使命",
+    "vision": { "title": "愿景", "text": "用歌声温柔改变世界" },
+    "mission": {
+      "title": "使命",
+      "lines": ["以成为艺术水准出色的合唱团", "和有责任担当的性少数群体组织为己任"]
+    }
+  },
+  "footer": "北京酷儿合唱团",
+  "langNavAriaLabel": "语言选择",
+  "langLinks": [
+    { "label": "中文", "hrefBase": "/zh-cn/", "hrefLocale": "zh-CN", "ariaLabel": "当前语言：中文" },
+    { "label": "EN", "hrefBase": "/en/", "hrefLocale": "en", "ariaLabel": "Switch to English" }
+  ]
+}

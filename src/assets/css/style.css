@@ -31,7 +31,9 @@ body {
 }
 
 /* 页头：logo 与竖排主导航共享垂直中轴（文档流内，不随滚动固定） */
+/* DOM 中页头在前：中文桌面横向框架时移到主内容之后（右侧导航） */
 .site-head {
+  order: 1;
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
@@ -68,6 +70,105 @@ body {
 .nav-toggle-input,
 .nav-toggle {
   display: none;
+}
+
+/* Footer：版权居左，语言链接居右 */
+/* 英文版 .page 为纵向（页头置顶），Footer 中的 .page 需恢复横向两端对齐 */
+.locale-en .site-footer .page {
+  flex-direction: row;
+  align-items: center;
+}
+.site-footer .page {
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.lang-links {
+  display: flex;
+  gap: 16px;
+}
+/* © 符号与版权文字垂直居中 */
+.site-footer .copyright {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+/* 中文字体（KingHwa）的 © 字形偏上：统一用西文字体绘制该符号，保证与文字对齐 */
+.site-footer .copy-symbol {
+  display: inline-block;
+  font-family: Georgia, "Times New Roman", serif;
+}
+.lang-links a {
+  color: #8a8375;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.lang-links a:hover { color: #b03a2e; }
+.lang-links a[aria-current='true'] { color: #b03a2e; }
+
+/* ===== 英文版式（.locale-en）：Logo 顶部居左 + 导航自左向右横向排列 ===== */
+@media (min-width: 881px) {
+  /* 纵向排布需拉伸对齐：抵消 .page 上为中文右导航顶对齐而设的 flex-start，
+     否则 page-main 收缩为内容宽度，Banner 的 width:100% 会退化为 auto */
+  .locale-en .page {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .locale-en .page-main { max-width: none; }
+  /* DOM 中页头在前，纵向排布默认即页头置顶，抵消基础样式的 order: 1 */
+  .locale-en .site-head {
+    order: 0;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    gap: 40px;
+    padding: 28px 0 12px;
+  }
+  .locale-en .site-menu {
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 28px;
+    padding-left: 0;
+    border-left: none;
+  }
+  .locale-en .site-menu a {
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+  }
+  /* hover 动画：短标签与长文本交叉过渡 — hover 时短标签收拢消失，长文本展开 */
+  .locale-en .nav-short {
+    display: inline-block;
+    max-width: 12ch;
+    opacity: 1;
+    overflow: hidden;
+    vertical-align: bottom;
+    transition: max-width 0.35s ease, opacity 0.35s ease;
+  }
+  .locale-en .nav-full {
+    display: inline-block;
+    max-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    vertical-align: bottom;
+    margin-left: 0;
+    transition: max-width 0.35s ease, opacity 0.35s ease, margin-left 0.35s ease;
+  }
+  .locale-en .site-menu a:hover .nav-short,
+  .locale-en .site-menu a:focus-visible .nav-short {
+    max-width: 0;
+    opacity: 0;
+  }
+  .locale-en .site-menu a:hover .nav-full,
+  .locale-en .site-menu a:focus-visible .nav-full {
+    max-width: 42ch;
+    opacity: 1;
+    margin-left: 0;
+  }
 }
 
 /* 标题与文本 */
@@ -199,5 +300,20 @@ time { color: #b3aa9c; font-size: 14px; }
     white-space: nowrap;
     font-size: 18px;
     text-align: right;
+  }
+  /* 英文菜单项：短标签为主、长文本为副标题（沿用中文版收合形态） */
+  .locale-en .site-menu a {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+  .locale-en .nav-full {
+    display: block;
+    max-width: none;
+    opacity: 1;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: rgba(0, 0, 0, 0.55);
   }
 }

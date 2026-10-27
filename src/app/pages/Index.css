@@ -18,26 +18,7 @@
   display: flex;
   flex-direction: column;
 }
-/* background 无法直接 filter：借伪元素承载底图，去色成墨调 */
-.home-cover::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: inherit;
-  filter: grayscale(1) contrast(1.05);
-}
-/* 纸感提亮层：右侧浓、左侧淡，杂志留白 + 保障墨字可读 */
-.home-cover::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    255deg,
-    rgba(250, 248, 244, 0.9) 0%,
-    rgba(250, 248, 244, 0.45) 42%,
-    rgba(250, 248, 244, 0.05) 100%
-  );
-}
+/* 底图保留原图色彩：不再做去色与纸感提亮叠层 */
 
 /* 图注：横排小字落款于封面左上，杂志图片说明位 */
 .cover-caption {
@@ -94,6 +75,39 @@
   color: #2c2a26; /* 愿景八字居首列，墨色最浓 */
 }
 
+/* ===== 英文版式（.locale-en）：愿景/使命横向排版（沿用背景封面方式） ===== */
+/* Banner 容器撑满页面最大宽度，并与底图（720×1080）保持同比例：
+   宽度确定后高度按 2/3 比例增大，cover 模式下图片完整展示、不裁切 */
+.locale-en .home-cover {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+}
+.locale-en .home-motto {
+  flex-direction: column; /* 面板纵向堆叠，文本横向 */
+  justify-content: center; /* 垂直居中，横向杂志版式 */
+  align-items: flex-start; /* LTR 左对齐 */
+  gap: 32px;
+  padding: 48px 40px;
+}
+.locale-en .motto-panel {
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
+  max-width: 56ch;
+  padding: 22px 26px;
+}
+.locale-en .motto-title {
+  margin: 0 0 10px;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+}
+.locale-en .motto-text {
+  letter-spacing: 0.02em;
+  line-height: 1.7;
+}
+.locale-en .motto-text--mission + .motto-text--mission {
+  margin-top: 8px;
+}
+
 /* ===== 响应式 ===== */
 @media (max-width: 880px) {
   /* 页头转为顶部横排，桌面为竖排导航预留的 padding-top 不再需要 */
@@ -110,6 +124,10 @@
   .home-motto {
     gap: 36px;
     padding: 32px 24px 32px 0;
+  }
+  /* 英文版式：左对齐，恢复对称留白 */
+  .locale-en .home-motto {
+    padding: 32px 24px;
   }
   .motto-title,
   .motto-text {
@@ -147,5 +165,17 @@
     letter-spacing: 0.06em;
     line-height: 1.9;
     text-align: right; /* 横排多行时保持右对齐 */
+  }
+  /* 英文版式：保持左对齐（LTR），面板占满宽度 */
+  .locale-en .home-motto {
+    justify-content: flex-start;
+    gap: 24px;
+    padding: 24px 16px 32px;
+  }
+  .locale-en .motto-panel {
+    max-width: 100%;
+  }
+  .locale-en .motto-text {
+    text-align: left;
   }
 }

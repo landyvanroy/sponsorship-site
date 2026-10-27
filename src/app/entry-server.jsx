@@ -1,5 +1,5 @@
 // entry-server.jsx — SSG 渲染入口（构建期执行，产出纯静态 HTML）
-// build.js 经 esbuild 打包本文件后 dynamic import，按页面名渲染对应组件树
+// build.js 经 esbuild 打包本文件后 dynamic import，按「页面名 + locale 内容」渲染对应组件树
 import { renderToStaticMarkup } from 'react-dom/server';
 import Layout from './components/Layout.jsx';
 import IndexPage from './pages/Index.jsx';
@@ -20,11 +20,16 @@ export function renderPage(page, data) {
   const Page = PAGES[page];
   if (!Page) throw new Error(`unknown page: ${page}`);
   const { site } = data;
-  const description = `${site.vision} ${site.mission}`;
   return (
     '<!DOCTYPE html>\n' +
     renderToStaticMarkup(
-      <Layout title={data.title} description={description} site={site} pageCss={PAGE_CSS[page]}>
+      <Layout
+        title={data.title}
+        description={site.description}
+        site={site}
+        pageCss={PAGE_CSS[page]}
+        path={data.path || ''}
+      >
         <Page {...data} />
       </Layout>
     )

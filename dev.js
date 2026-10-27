@@ -44,7 +44,11 @@ const server = http.createServer((req, res) => {
   if (notFound) target = path.join(DIST, '404.html');
 
   const ext = path.extname(target).toLowerCase();
-  res.writeHead(notFound ? 404 : 200, { 'Content-Type': MIME[ext] ?? 'application/octet-stream' });
+  res.writeHead(notFound ? 404 : 200, {
+    'Content-Type': MIME[ext] ?? 'application/octet-stream',
+    // dev 服务器禁用缓存：src 变更重建后，浏览器必须立刻拿到新产物
+    'Cache-Control': 'no-cache',
+  });
   fs.createReadStream(target).pipe(res);
 });
 

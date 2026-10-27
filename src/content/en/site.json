@@ -1,0 +1,39 @@
+{
+  "locale": "en",
+  "lang": "en",
+  "title": "BQC",
+  "description": "Sing for a better world. Beijing Queer Chorus: to be an artistically outstanding chorus, and a socially responsible LGBTQIA+ organization.",
+  "logo": "/assets/img/logo.jpg",
+  "logoAriaLabel": "BQC · Back to home",
+  "homeHref": "/en/",
+  "banner": {
+    "image": "/assets/img/banner.jpg",
+    "alt": "Backstage: music stands lined up on stage, a member waiting to perform",
+    "caption": ""
+  },
+  "url": "https://bqcbqc.org",
+  "fontCss": "/assets/css/fonts.en.css",
+  "nav": [
+    { "label": "BQC", "labelFull": "Beijing Queer Chorus", "href": "/en/" },
+    { "label": "Did", "labelFull": "What We Have Achieved", "href": "/en/#works" },
+    { "label": "Plan", "labelFull": "What We Are Doing & Planning to Do", "href": "/en/#now" },
+    { "label": "Give", "labelFull": "Donate & Help Make Change", "href": "/en/support/" },
+    { "label": "Find", "labelFull": "How to Find Us", "href": "/en/contact/" }
+  ],
+  "navAriaLabel": "Main navigation",
+  "placeholderTitle": "Coming soon",
+  "home": {
+    "ariaLabel": "Vision and Mission",
+    "vision": { "title": "Vision", "text": "Sing for a better world." },
+    "mission": {
+      "title": "Mission",
+      "lines": ["To be an artistically outstanding chorus, and a socially responsible LGBTQIA+ organization."]
+    }
+  },
+  "footer": "Beijing Queer Chorus",
+  "langNavAriaLabel": "Language",
+  "langLinks": [
+    { "label": "中文", "hrefBase": "/zh-cn/", "hrefLocale": "zh-CN", "ariaLabel": "切换到中文" },
+    { "label": "EN", "hrefBase": "/en/", "hrefLocale": "en", "ariaLabel": "Current language: English" }
+  ]
+}
