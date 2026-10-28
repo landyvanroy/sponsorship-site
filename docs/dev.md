@@ -8,41 +8,60 @@
 
 ```bash
 npm install        # 安装依赖
-npm run build      # 构建到 dist/
-npm run dev        # 构建 + 启动 http://localhost:8080（监听 src/ 变化自动重建）
-npm run preview    # 只启动服务器（需先 build）
+npm run build      # 构建到 dist/（Vite 两阶段：SSR 渲染 + 资源构建，含字体子集化）
+npm run dev        # Vite dev server，默认 http://localhost:5173（端口被占用自动 +1）
+npm run preview    # 预览 dist/ 产物（需先 build，未命中路由回退 404.html）
 ```
+
+dev server 按请求实时渲染 HTML（`configureServer` 中间件 + `ssrLoadModule`），Tailwind 与 CSS 改动即时热更新（HMR），无需全量重建；未命中路由直接渲染 404 页。dev 模式跳过字体子集化，使用系统宋体回退栈（`src/app/styles/fonts.dev.css`）。
 
 ### React DevTools（可选）
 
-本站是纯静态 SSG，浏览器里没有 React 运行时。`npm run dev:devtools` 会在 dev 构建时额外打包一个客户端运行时（整份文档 hydration）并注入独立版 DevTools backend；配合独立版应用即可检查组件树：
+本站是纯静态 SSG，浏览器里没有 React 运行时。`npm run dev:devtools`（即 `vite --mode devtools`）会在 dev 渲染的 HTML 中注入客户端运行时（整份文档 hydration）与独立版 DevTools backend；配合独立版应用即可检查组件树：
 
 ```bash
-npm run dev:devtools   # 终端 1：带 DevTools 接线构建 + 启动 dev server
+npm run dev:devtools   # 终端 1：带 DevTools 接线启动 dev server
 npm run devtools       # 终端 2：打开独立版 React DevTools（连接 ws://localhost:8097）
 ```
 
 生产构建（`npm run build`）不走该分支，产物仍为纯静态零 JS。
 
-> 本地开发需要把源字体放在 `fonts/source/source-font.ttf`（已被 .gitignore 排除，不入库）。
-> 缺字体时构建不阻塞：页面回退到系统宋体并输出警告。
+> 生产构建需要把源字体放在 `fonts/source/source-font.ttf`（已被 .gitignore 排除，不入库）。
+> 缺字体时本地构建不阻塞：页面回退到系统宋体并输出警告；CI 下会直接报错。
 
 ## 目录结构
 
 ```
-├── build.js                    # 构建流水线（ESM）
-├── dev.js                      # 零依赖本地服务器（含 watch 自动重建）
+├── build.mjs                   # 生产构建编排（Vite 两阶段：SSR 渲染 → 字体子集化 → 资源构建）
+├── vite.config.mjs             # dev / preview 配置（SSG 中间件、devtools 注入、404 兜底）
+├── ssg.shared.mjs              # dev/build 共享常量与纯函数（locale 配置、码点收集、sitemap 等）
+├── public/assets/img/          # 静态图片（原样拷贝，URL 保持 /assets/img/... 不变）
 ├── src/
 │   ├── content/
-│   │   ├── site.json           # 站点配置：标题 / 导航 / 页脚 / 域名 url
-│   │   ├── data/gallery.json   # 字帖橱窗数据（JSON 驱动列表 + 详情页）
-│   │   └── posts/*.md          # 随笔（Markdown + frontmatter → 列表 + 详情页）
-│   ├── app/                    # React 组件（Layout/Nav/Footer + 各页面，构建期 SSG 渲染为静态 HTML）
-│   │   └── styles/tailwind.css # Tailwind 入口（theme + utilities，构建期经 CLI 编译）
-│   └── assets/                 # css / img
+│   │   ├── zh-cn/site.json     # 中文站点配置：标题 / 导航 / 页脚 / 域名 url / fontCss
+│   │   ├── en/site.json        # 英文站点配置
+│   │   ├── data/*.json         # 数据驱动内容（JSON）
+│   │   └── posts/*.md          # 随笔（Markdown + frontmatter）
+│   ├── app/                    # React 组件（Layout/Header/Footer + 各页面，构建期 SSG 渲染为静态 HTML）
+│   │   ├── asset-urls.js       # CSS 资源 URL 单一来源（dev/build 渲染前注入实际路径）
+│   │   ├── entry-server.jsx    # SSG 渲染入口
+│   │   └── styles/tailwind.css # Tailwind 入口（theme + utilities，经 @tailwindcss/vite 编译）
+│   └── assets/css/style.css    # 全站手写样式
 ├── fonts/source/               # 源字体（gitignored，禁止入库）
-├── .github/workflows/deploy.yml# CI/CD
+├── .github/workflows/deploy.yml# CI/CD（node build.mjs → wrangler pages deploy）
 └── dist/                       # 构建产物（gitignored）
+```
+
+### 构建产物（dist/）
+
+```
+dist/{locale}/index.html        # 各语言首页（head 中的 CSS 已被改写为 hash 文件名）
+dist/404.html                   # 404 页（中文）
+dist/index.html                 # 根路径语言跳转页（全站唯一含 JS 的产物）
+dist/assets/<name>-[hash].css   # CSS（Tailwind + style.css 合并 chunk / 字体表 / 页面样式）
+dist/assets/<name>-[hash].woff2 # 子集化字体
+dist/assets/img/                # 图片（public/ 原样拷贝，无 hash）
+dist/sitemap.xml · robots.txt · _headers
 ```
 
 ## 样式规范
@@ -51,15 +70,15 @@ npm run devtools       # 终端 2：打开独立版 React DevTools（连接 ws:/
 
 | 层 | 位置 | 引入方式 | 用途 |
 | --- | --- | --- | --- |
-| Tailwind 工具类 | `src/app/styles/tailwind.css`（入口）→ 编译为 `dist/assets/css/tailwind.css` | `Layout.jsx` 全站 `<link>` | 快速布局 / 间距 / 响应式工具 |
+| Tailwind 工具类 | `src/app/styles/tailwind.css`（入口），经 `@tailwindcss/vite` 编译 | `Layout.jsx` 全站 `<link>`（URL 见 `asset-urls.js`） | 快速布局 / 间距 / 响应式工具 |
 | 全站样式 | `src/assets/css/style.css` | `Layout.jsx` 全站 `<link>` | 页面框架（`.page` / `.page-main`）、Header / Footer、通用排版 |
-| 页面级样式 | `src/app/pages/*.css`（与页面 JSX 同目录） | `Layout` 的 `pageCss` 属性按页传入 | 仅该页面使用的选择器 |
+| 页面级样式 | `src/app/pages/*.css`（与页面 JSX 同目录） | `Layout` 的 `pageCss` 属性按页传入（URL 由 `asset-urls.js` 的 `urls.pages` 管理） | 仅该页面使用的选择器 |
 
 规则：
 
 - **页面专属样式一律写在 `src/app/pages/<Page>.css`**，并在对应页面组件调用 `Layout` 时通过 `pageCss={[...]}` 传入；不要把页面选择器写进 `style.css`，也不要新建全局表。
 - **两个以上页面复用的样式**才提升到 `style.css`，命名用 `kebab-case`，前缀体现归属（如 `cover-`、`motto-`）。
-- 构建期页面 CSS 被拷贝为 `/assets/css/pages/<Page>.css`，无需手写路径。
+- 构建期 CSS 由 Vite 抽取并输出 hash 文件名（多个 `<link>` 可能合并进同一 chunk），无需手写产物路径；源码中也不要硬编码 `/assets/css/...`，一律引用 `asset-urls.js`。
 
 ### Tailwind v4 使用约定
 
@@ -82,7 +101,7 @@ npm run devtools       # 终端 2：打开独立版 React DevTools（连接 ws:/
 
 ## 中文字体动态子集化
 
-构建时遍历所有渲染后的 HTML，收集实际用到的每个字符（含生僻字），用 [subset-font](https://github.com/papandreou/subset-font)（HarfBuzz wasm）把 33MB 的源字体子集化为仅含这些字形的 woff2（当前约 223KB，构建 3 秒内）。字体文件名带内容哈希，内容不变则缓存永久有效；新增生僻字后重建，子集自动扩容。缺字回退栈：Songti SC / SimSun / Noto Serif CJK SC / serif。
+构建时（`build.mjs` 阶段二）遍历所有渲染后的 HTML（暂存于 `.ssg-tmp/`），收集实际用到的每个字符（含生僻字），用 [subset-font](https://github.com/papandreou/subset-font)（HarfBuzz wasm）把 33MB 的源字体子集化为仅含这些字形的 woff2（当前约 152KB）。woff2 与字体 CSS 一并写入暂存目录，交给阶段三的 Vite 客户端构建统一输出 `[name].[hash].woff2`；内容不变则缓存永久有效，新增生僻字后重建，子集自动扩容。缺字回退栈：Songti SC / SimSun / Noto Serif CJK SC / serif。dev 模式跳过子集化（太慢），直接用回退栈。英文站走独立系统衬线栈（`fonts.en.css`），不参与 CJK 子集化。
 
 ## 一次性配置（部署前）
 
@@ -110,7 +129,7 @@ npm run devtools       # 终端 2：打开独立版 React DevTools（连接 ws:/
 1. 域名 `bqcbqc.org` 就绪后，把其 NS 迁入 Cloudflare（免费方案，推荐：自动 SSL + 完整功能）。
 2. Cloudflare 面板 → Workers & Pages → `bqcbqc` → Custom domains → 添加域名（裸域 `bqcbqc.org` + `www.bqcbqc.org` 都可加）。
 3. 等待证书自动签发（通常几分钟），HTTPS 直接可用。
-4. `src/content/site.json` 的 `url` 已为 `https://bqcbqc.org`，无需再改；若日后换域名，改这里并 push（sitemap / robots / canonical 全站自动跟随）。
+4. `src/content/{zh-cn,en}/site.json` 的 `url` 已为 `https://bqcbqc.org`，无需再改；若日后换域名，改这里并 push（sitemap / robots / canonical 全站自动跟随）。
 
 ## 字体许可备注
 
