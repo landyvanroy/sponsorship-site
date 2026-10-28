@@ -1,4 +1,11 @@
-/* dev 专用：跳过字体子集化（subset-font 耗时），直接使用系统衬线回退栈。
+/* dev 专用：直接加载未子集化的源字体（subset-font 子集化仅生产构建做，dev 无需等待）。
  * 生产构建由 build.mjs 按页面用字生成子集化 fonts.zh-cn.css（woff2 交 Vite hash）。 */
-:root { --font-song: "Songti SC", "SimSun", "Noto Serif CJK SC", serif; }
+@font-face {
+  font-family: 'KingHwaOldSong';
+  src: url('../../../fonts/source/source-font.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+:root { --font-song: 'KingHwaOldSong', 'Songti SC', 'SimSun', 'Noto Serif CJK SC', serif; }
 body { font-family: var(--font-song); }

@@ -19,3 +19,7 @@ fonts/source/
 # WorkBuddy 项目数据
 .workbuddy/
 .codebuddy/
+
+# 其他
+.screenshots/
+.tw-debug/

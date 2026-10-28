@@ -1,4 +1,4 @@
-/* 首页（Index.jsx）页面级样式：杂志式封面 — 剧照 background-cover 满幅，愿景/使命竖排叠印其上 */
+/* 首页（Index.jsx）页面级样式：杂志式封面 — 剧照 background-cover 满幅，愿景/使命叠印其上 */
 /* 含封面时让 .page-main 变为纵向 flex，封面 flex:1 精确占满主容器剩余空间 */
 .page-main:has(.home-cover) {
   display: flex;
@@ -18,20 +18,20 @@
   display: flex;
   flex-direction: column;
 }
-/* 底图保留原图色彩：不再做去色与纸感提亮叠层 */
 
 /* 图注：横排小字落款于封面左上，杂志图片说明位 */
 .cover-caption {
   position: relative;
   z-index: 1;
   margin: 0;
-  padding: 28px 0 0 40px;
-  font-size: 14px;
-  letter-spacing: 0.4em;
-  color: #fff;
+  padding: 24px 0 0 40px;
+  font-size: 12px;
+  letter-spacing: 0.32em;
+  color: rgba(250, 248, 244, 0.92);
 }
 
-/* 愿景/使命：竖排墨字组 — 贴容器右缘（右对齐）、整体自顶部起排（顶对齐） */
+/* ===== 愿景/使命：暖白纸幕上的墨字组 ===== */
+/* 承托统一改用页面同款暖白（非纯白）：半透明 + 轻微虚化，比纯白更稳、更贴纸感 */
 .home-motto {
   position: relative;
   z-index: 1;
@@ -40,34 +40,48 @@
   flex-direction: row-reverse; /* 自右向左阅读：愿景居右，使命居左 */
   justify-content: flex-start; /* 整组贴右缘 → 右对齐 */
   align-items: flex-start; /* 顶对齐 */
-  gap: 56px;
+  gap: 40px;
   padding: 48px 40px;
 }
 .motto-panel {
   position: relative;
   writing-mode: vertical-rl; /* 文本自上而下 */
   text-orientation: upright;
-  /* 半透明白色底幕：托住文字、不遮死底图 */
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  padding: 24px 16px;
+  background: rgba(250, 248, 244, 0.55);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  padding: 28px 20px;
 }
-/* 标题与正文统一字号（28px），仅以字重与墨色分主次，无任何边框 */
+/* 中文错落节奏：愿景顶齐，使命下沉半拍 — 画册页面的疏密，化解等高白块的呆板 */
+.home-motto .motto-panel:last-child {
+  margin-top: 48px;
+}
+
+/* 标题：老宋加浓 + 朱红刻线（全站唯一装饰色，呼应印章） */
 .motto-title {
-  margin: 0 0 0 28px; /* 与正文列距（竖排 block-end = 左） */
+  margin: 0 0 0 24px; /* 与正文列距（竖排 block-end = 左） */
   height: max-content;
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 700;
-  letter-spacing: 0.35em;
-  line-height: 1.6;
+  letter-spacing: 0.42em;
+  line-height: 1.35;
   color: #2c2a26;
 }
+/* 刻线：竖排下为标题列右缘的竖向短线；块级盒，位置确定不随基线漂移 */
+.motto-title::before {
+  content: '';
+  display: block;
+  width: 2px;
+  height: 26px;
+  margin-left: 10px;
+  background: #b03a2e;
+}
+/* 正文：缩一级、放开字距 — 与标题拉开明确的层级 */
 .motto-text {
   margin: 0;
-  font-size: 28px;
+  font-size: 19px;
   font-weight: 400;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.24em;
   line-height: 1.6;
   color: #3a3a38;
 }
@@ -75,37 +89,58 @@
   color: #2c2a26; /* 愿景八字居首列，墨色最浓 */
 }
 
-/* ===== 英文版式（.locale-en）：愿景/使命横向排版（沿用背景封面方式） ===== */
-/* Banner 容器撑满页面最大宽度，并与底图（720×1080）保持同比例：
-   宽度确定后高度按 2/3 比例增大，cover 模式下图片完整展示、不裁切 */
+/* ===== 英文版式（.locale-en）：整块编辑式排版 ===== */
+/* 两段共用同一张纸幕、以细线分隔 — 取消独立"白卡片"感；标题小型化，正文限宽 */
 .locale-en .home-cover {
   width: 100%;
   aspect-ratio: 2 / 3;
 }
 .locale-en .home-motto {
   flex-direction: column; /* 面板纵向堆叠，文本横向 */
-  justify-content: center; /* 垂直居中，横向杂志版式 */
-  align-items: flex-start; /* LTR 左对齐 */
-  gap: 32px;
-  padding: 48px 40px;
+  justify-content: flex-start; /* 顶部比例定位：首屏内完整呈现愿景+使命 */
+  align-items: stretch; /* 两段同宽 → 连成一块完整的文字幕 */
+  max-width: 30rem;
+  gap: 0;
+  padding: clamp(180px, 30vh, 420px) 40px 48px;
+}
+.locale-en .home-motto .motto-panel:last-child {
+  margin-top: 0; /* 英文为纵向堆叠，取消中文的下沉错落 */
 }
 .locale-en .motto-panel {
   writing-mode: horizontal-tb;
   text-orientation: mixed;
-  max-width: 56ch;
-  padding: 22px 26px;
+  padding: 30px 34px 26px;
+}
+.locale-en .motto-panel + .motto-panel {
+  border-top: 1px solid rgba(44, 42, 38, 0.22); /* 段间细墨线 */
+  padding: 24px 34px 30px;
 }
 .locale-en .motto-title {
-  margin: 0 0 10px;
-  letter-spacing: 0.06em;
+  margin: 0 0 12px;
+  font-size: 12px;
+  letter-spacing: 0.38em;
   line-height: 1.4;
+  text-transform: uppercase;
+  color: #6b6a66;
+}
+/* 英文刻线：标题上方的横向短线 — 与中文的竖向刻线互为镜像 */
+.locale-en .motto-title::before {
+  width: 26px;
+  height: 2px;
+  margin: 0 0 10px;
 }
 .locale-en .motto-text {
-  letter-spacing: 0.02em;
-  line-height: 1.7;
+  font-size: 17px;
+  letter-spacing: 0.01em;
+  line-height: 1.75;
+}
+.locale-en .motto-text--vision {
+  font-size: 22px;
+  font-style: italic; /* 愿景一句话作 hero 行，衬线斜体 */
+  line-height: 1.5;
 }
 .locale-en .motto-text--mission + .motto-text--mission {
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 /* ===== 响应式 ===== */
@@ -122,21 +157,29 @@
     padding: 20px 0 0 20px;
   }
   .home-motto {
-    gap: 36px;
+    gap: 32px;
     padding: 32px 24px 32px 0;
+  }
+  .home-motto .motto-panel:last-child {
+    margin-top: 36px;
+  }
+  .motto-title {
+    font-size: 24px;
+  }
+  .motto-title::before {
+    height: 22px;
+  }
+  .motto-text {
+    font-size: 17px;
   }
   /* 英文版式：左对齐，恢复对称留白 */
   .locale-en .home-motto {
     padding: 32px 24px;
   }
-  .motto-title,
-  .motto-text {
-    font-size: 22px;
-  }
 }
 
 @media (max-width: 640px) {
-  /* 竖排转横排堆叠，仍保持顶对齐、右对齐 */
+  /* 竖排转横排堆叠，仍保持顶对齐、右对齐；错落取消 */
   .home-cover {
     min-height: 72svh;
   }
@@ -149,33 +192,52 @@
     gap: 28px;
     padding: 24px 16px 32px;
   }
+  .home-motto .motto-panel:last-child {
+    margin-top: 0;
+  }
   .motto-panel {
     writing-mode: horizontal-tb;
     text-orientation: mixed;
-    padding: 18px 14px;
+    padding: 20px 18px;
     max-width: 100%;
   }
   .motto-title {
     margin: 0;
     font-size: 20px;
+    letter-spacing: 0.3em;
+  }
+  /* 横排下刻线转为标题上方的横向短线 */
+  .motto-title::before {
+    width: 18px;
+    height: 2px;
+    margin: 0 0 8px;
   }
   .motto-text {
     margin-top: 8px;
-    font-size: 20px;
-    letter-spacing: 0.06em;
+    font-size: 17px;
+    letter-spacing: 0.08em;
     line-height: 1.9;
     text-align: right; /* 横排多行时保持右对齐 */
   }
   /* 英文版式：保持左对齐（LTR），面板占满宽度 */
   .locale-en .home-motto {
     justify-content: flex-start;
-    gap: 24px;
+    gap: 0;
+    max-width: 100%;
     padding: 24px 16px 32px;
   }
   .locale-en .motto-panel {
     max-width: 100%;
+    padding: 24px 20px;
+  }
+  .locale-en .motto-panel + .motto-panel {
+    padding: 20px 20px 24px;
   }
   .locale-en .motto-text {
+    font-size: 16px;
     text-align: left;
+  }
+  .locale-en .motto-text--vision {
+    font-size: 20px;
   }
 }

@@ -5,7 +5,7 @@ export default function Header({ site }) {
   return (
     <header className="site-head">
       <a className="site-logo" href={site.homeHref} aria-label={site.logoAriaLabel}>
-        <img src={site.logo} alt="" width="44" height="44" />
+        <img src={site.logo} alt="" width="36" height="36" />
       </a>
       {/* 折叠开关：checkbox 需位于 .site-menu 之前，供 ~ 兄弟选择器联动 */}
       <input type="checkbox" id="nav-toggle" className="nav-toggle-input" />

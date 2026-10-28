@@ -44,26 +44,27 @@ body {
 }
 .site-logo img {
   display: block;
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
 }
 .site-menu {
   writing-mode: vertical-rl;
   text-orientation: upright;
   display: flex;
   /* 竖排下行内轴为自上而下：菜单项单列堆叠，参考设计稿 */
-  gap: 18px;
+  gap: 16px;
   padding-left: 10px;
-  border-left: 1px solid #2c2a26; /* 贴近导航文本的黑色竖线 */
+  border-left: 1px solid rgba(44, 42, 38, 0.35); /* 细淡墨线：降低导航存在感，衬托内容 */
 }
 .site-menu a {
-  color: #9b988f;
+  color: #8a8375;
   text-decoration: none;
-  font-size: 15px;
-  letter-spacing: 0.35em;
-  transition: color 0.2s ease;
+  font-size: 14px;
+  letter-spacing: 0.3em;
+  transition: color 0.25s ease;
 }
-.site-menu a:hover { color: #b03a2e; }
+/* 朱红只保留给印章刻线与当前语言态，导航悬停回归墨色 */
+.site-menu a:hover { color: #2c2a26; }
 .site-menu a.placeholder { color: #c4c0b6; }
 
 /* 折叠导航开关：桌面隐藏（菜单常驻），仅移动端启用（纯 CSS checkbox 方案） */
@@ -103,10 +104,17 @@ body {
 .lang-links a {
   color: #8a8375;
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: color 0.25s ease;
 }
-.lang-links a:hover { color: #b03a2e; }
-.lang-links a[aria-current='true'] { color: #b03a2e; }
+.lang-links a:hover { color: #2c2a26; }
+/* 当前语言：朱红 + 细下划线 — 页脚唯一的强调态 */
+.lang-links a[aria-current='true'] {
+  color: #b03a2e;
+  text-decoration: underline;
+  text-decoration-color: rgba(176, 58, 46, 0.45);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+}
 
 /* ===== 英文版式（.locale-en）：Logo 顶部居左 + 导航自左向右横向排列 ===== */
 @media (min-width: 881px) {
@@ -137,8 +145,23 @@ body {
     border-left: none;
   }
   .locale-en .site-menu a {
-    letter-spacing: 0.12em;
+    position: relative;
+    font-size: 13px; /* 与中文 14px 做光学等大（Georgia x-height 更高） */
+    letter-spacing: 0.14em;
     white-space: nowrap;
+  }
+  /* hover 画线：朱红细线自左向右展开，与短/长标签切换同步 */
+  .locale-en .site-menu a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -5px;
+    width: 100%;
+    height: 1px;
+    background: #b03a2e;
+    transform: scaleX(0);
+    transform-origin: left; /* LTR：从标签起始端展开 */
+    transition: transform 0.35s ease;
   }
   /* hover 动画：短标签与长文本交叉过渡 — hover 时短标签收拢消失，长文本展开 */
   .locale-en .nav-short {
@@ -169,6 +192,10 @@ body {
     opacity: 1;
     margin-left: 0;
   }
+  .locale-en .site-menu a:hover::after,
+  .locale-en .site-menu a:focus-visible::after {
+    transform: scaleX(1);
+  }
 }
 
 /* 标题与文本 */
@@ -183,9 +210,10 @@ time { color: #b3aa9c; font-size: 14px; }
   border-top: 1px solid #e8e2d6;
   display: flex;
   align-items: center;
-  min-height: 120px;
+  min-height: 112px;
   color: #8a8375;
-  font-size: 14px;
+  font-size: 13px;
+  letter-spacing: 0.02em;
 }
 .site-footer .page { width: 100%; }
 
