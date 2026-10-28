@@ -4,17 +4,18 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import Layout from './components/Layout.jsx';
 import IndexPage from './pages/Index.jsx';
 import NotFoundPage from './pages/NotFound.jsx';
+import urls from './asset-urls.js';
+
+// CSS 资源 URL 注入：dev（vite.config.mjs）与生产构建（build.mjs）渲染前调用
+export { setAssetUrls } from './asset-urls.js';
 
 const PAGES = {
   index: IndexPage,
   '404': NotFoundPage,
 };
 
-// 页面级样式表：与页面文件同目录（src/app/pages/*.css），构建期拷贝到 /assets/css/pages/
-const PAGE_CSS = {
-  index: ['/assets/css/pages/Index.css'],
-  '404': [],
-};
+// 页面级样式表：与页面文件同目录（src/app/pages/*.css），URL 由 asset-urls.js 统一管理
+const PAGE_CSS = urls.pages;
 
 export function renderPage(page, data) {
   const Page = PAGES[page];

@@ -1,6 +1,7 @@
 # 依赖与构建产物
 node_modules/
 dist/
+.ssg-tmp/
 
 # 源字体（商业授权，禁止入库/再分发）
 fonts/source/

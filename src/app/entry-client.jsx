@@ -3,7 +3,6 @@
 // 才能通过 backend（ws://localhost:8097）检查组件树 / props / state。
 // 生产构建不经过此文件，产物仍为纯静态零 JS。
 import { createRoot } from 'react-dom/client';
-import site from '../content/site.json';
 import Layout from './components/Layout.jsx';
 import IndexPage from './pages/Index.jsx';
 import NotFoundPage from './pages/NotFound.jsx';
@@ -14,7 +13,9 @@ const PAGES = {
   '404': NotFoundPage,
 };
 
-const page = window.location.pathname === '/' ? 'index' : '404';
+// site 与页面名由 dev server（vite.config.mjs，devtools 模式）注入
+const site = window.__BQC_SITE__;
+const page = window.__BQC_PAGE__;
 const Page = PAGES[page];
 const title = document.title;
 const description = document.querySelector('meta[name="description"]')?.content ?? '';
