@@ -3,7 +3,7 @@
 .page-main:has(.home-cover) {
   display: flex;
   flex-direction: column;
-  padding-top: 96px;
+  padding-top: 0;
 }
 .home-cover {
   position: relative;
@@ -38,7 +38,7 @@
   flex: 1;
   display: flex;
   flex-direction: row-reverse; /* 自右向左阅读：愿景居右，使命居左 */
-  justify-content: flex-start; /* 整组贴右缘 → 右对齐 */
+  justify-content: flex-end; /* 整组贴右缘 → 右对齐 */
   align-items: flex-start; /* 顶对齐 */
   gap: 40px;
   padding: 48px 40px;
@@ -54,7 +54,6 @@
 }
 /* 中文错落节奏：愿景顶齐，使命下沉半拍 — 画册页面的疏密，化解等高白块的呆板 */
 .home-motto .motto-panel:last-child {
-  margin-top: 48px;
 }
 
 /* 标题：老宋加浓 + 朱红刻线（全站唯一装饰色，呼应印章） */
@@ -101,7 +100,7 @@
   align-items: stretch; /* 两段同宽 → 连成一块完整的文字幕 */
   max-width: 30rem;
   gap: 0;
-  padding: clamp(180px, 30vh, 420px) 40px 48px;
+  /* padding: clamp(180px, 30vh, 420px) 40px 48px; */
 }
 .locale-en .home-motto .motto-panel:last-child {
   margin-top: 0; /* 英文为纵向堆叠，取消中文的下沉错落 */

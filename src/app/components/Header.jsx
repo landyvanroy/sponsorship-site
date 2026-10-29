@@ -1,12 +1,28 @@
 // Header — 全站页头：桌面端 logo 居右上 + 竖排主导航（英文版式为 logo 居左 + 横向导航，
 // 由 .locale-en 作用域样式切换）；移动端 logo 居左、菜单收进图标按钮
 // （纯 CSS 复选框开关，构建产物保持零 JS）
-export default function Header({ site }) {
+// 链接 = 各语言 hrefBase + 当前页面相对路径（首页 path 为空 → 落语言根）
+export default function Header({ site, path = '' }) {
   return (
     <header className="site-head">
+	  <div className="site-logo-wrap">
       <a className="site-logo" href={site.homeHref} aria-label={site.logoAriaLabel}>
         <img src={site.logo} alt="" width="36" height="36" />
       </a>
+        <nav className="lang-links" aria-label={site.langNavAriaLabel}>
+          {site.langLinks.map((link) => (
+            <a
+              key={link.hrefLocale}
+              href={`${link.hrefBase}${path}`}
+              hrefLang={link.hrefLocale}
+              aria-label={link.ariaLabel}
+              aria-current={link.hrefLocale === site.lang ? 'true' : undefined}
+            >
+              {link.label}
+            </a>
+          ))}
+        </nav>
+	  </div>
       {/* 折叠开关：checkbox 需位于 .site-menu 之前，供 ~ 兄弟选择器联动 */}
       <input type="checkbox" id="nav-toggle" className="nav-toggle-input" />
       <label htmlFor="nav-toggle" className="nav-toggle" aria-label={site.navAriaLabel}>

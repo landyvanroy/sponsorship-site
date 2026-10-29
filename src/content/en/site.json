@@ -33,7 +33,7 @@
   "footer": "Beijing Queer Chorus",
   "langNavAriaLabel": "Language",
   "langLinks": [
-    { "label": "中文", "hrefBase": "/zh-cn/", "hrefLocale": "zh-CN", "ariaLabel": "切换到中文" },
-    { "label": "EN", "hrefBase": "/en/", "hrefLocale": "en", "ariaLabel": "Current language: English" }
+    { "label": "汉", "hrefBase": "/zh-cn/", "hrefLocale": "zh-CN", "ariaLabel": "切换到汉语" },
+    { "label": "EN", "hrefBase": "/en/", "hrefLocale": "en", "ariaLabel": "Currnet language: English" }
   ]
 }

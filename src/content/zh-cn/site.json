@@ -32,7 +32,7 @@
   "footer": "北京酷儿合唱团",
   "langNavAriaLabel": "语言选择",
   "langLinks": [
-    { "label": "中文", "hrefBase": "/zh-cn/", "hrefLocale": "zh-CN", "ariaLabel": "当前语言：中文" },
+    { "label": "汉", "hrefBase": "/zh-cn/", "hrefLocale": "zh-CN", "ariaLabel": "当前语言：中文" },
     { "label": "EN", "hrefBase": "/en/", "hrefLocale": "en", "ariaLabel": "Switch to English" }
   ]
 }
